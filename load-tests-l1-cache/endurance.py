@@ -6,7 +6,7 @@ from common.utils import *
 class UserTasks(TaskSet):
     @task
     def home(self):
-        page = "about_offices"
+        page = "home"
         self.client.get(f"/webapp?page={page}")
         # get_resources(self.client, page)
         post_visit_and_get_counter(self.client, page)
@@ -35,14 +35,12 @@ class StagesShape(LoadTestShape):
 
     stages = [
         {"duration": 30, "users": 5, "spawn_rate": 10},
-        {"duration": 40, "users": 25, "spawn_rate": 10},
-        {"duration": 50, "users": 50, "spawn_rate": 10},
         {"duration": 60, "users": 25, "spawn_rate": 10},
-        {"duration": 70, "users": 5, "spawn_rate": 10},
-        {"duration": 80, "users": 25, "spawn_rate": 10},
-        {"duration": 90, "users": 100, "spawn_rate": 10},
-        {"duration": 100, "users": 25, "spawn_rate": 10},
-        {"duration": 110, "users": 5, "spawn_rate": 10},
+        {"duration": 120, "users": 50, "spawn_rate": 10},
+        {"duration": 1200, "users": 100, "spawn_rate": 10},  # 20 minutos
+        {"duration": 1260, "users": 50, "spawn_rate": 10},
+        {"duration": 1320, "users": 25, "spawn_rate": 10},
+        {"duration": 1380, "users": 5, "spawn_rate": 10},
     ]
 
     def tick(self):
