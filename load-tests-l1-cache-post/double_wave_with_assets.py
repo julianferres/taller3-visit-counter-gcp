@@ -7,9 +7,9 @@ from common.utils import *
 class UserTasks(TaskSet):
     @task
     def home(self):
-        page = "about"
+        page = "about_legals"
         self.client.get(f"/webapp?page={page}")
-        # get_resources(self.client, page)
+        get_resources(self.client, page)
         post_visit_and_get_counter(self.client, page)
 
 
@@ -32,8 +32,8 @@ class DoubleWave(LoadTestShape):
     """
 
     min_users = 10
-    peak_one_users = 40
-    peak_two_users = 40
+    peak_one_users = 500
+    peak_two_users = 500
     time_limit = 600
 
     def tick(self):

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from google.cloud import firestore
 
@@ -79,16 +79,17 @@ def get_count(request):
         cache_count[page] = total_count
         cache_last_updated[page] = datetime.now()
 
-        get_count_cache = [cache]
+        get_count_cache = [cache_count, cache_last_updated]
 
         return str(total_count), 200
     else:
-        return str(cache_count), 200
+        return str(cache_count[page]), 200
 
 
 ################################################################
 
 import json
+from collections import defaultdict
 
 from google.cloud import pubsub_v1
 
@@ -96,8 +97,15 @@ publisher = pubsub_v1.PublisherClient()
 PROJECT_ID = "taller3-julianferres"
 TOPIC_NAME = "VISITS"
 
+# L1 GET_COUNT CACHE
+post_visit_lazy_update = [defaultdict(int), {}]
+# value, last_submitted (every one minute it updates)
+
+
 
 def post_visit(request):
+    global post_visit_lazy_update
+
     valid_pages = ["home", "jobs", "about", "about_legals", "about_offices"]
 
     request_args = request.args
@@ -112,18 +120,37 @@ def post_visit(request):
     if not topic_name:
         return ('Missing "topic" and/or "message" parameter.', 400)
 
-    print(f'Publishing message to topic {topic_name}')
-
+    print(f'Message message by post_visit, soon it will be dispatched')
+    
     # References an existing topic
     topic_path = publisher.topic_path(PROJECT_ID, topic_name)
 
-    message_json = json.dumps({'page': page})
-    message_bytes = message_json.encode('utf-8')
+    post_visit_count, page_last_dispatch = post_visit_lazy_update
 
     # Publishes a message
     try:
-        publish_future = publisher.publish(topic_path, data=message_bytes)
-        publish_future.result()  # Verify the publish succeeded
+        if page not in post_visit_count:
+        # Despacho de forma lazy, como mucho una vez cada 5 segundos 
+        # - Esto provoca una disminución fuerte de los mensajes en la cola, y 
+        # de la cantidad de escrituras en firestore.
+            post_visit_count[page] = 1
+            page_last_dispatch[page] = datetime.now() # Init cache
+        elif (datetime.now() - page_last_dispatch[page]).seconds < 60:
+            post_visit_count[page] += 1
+        else:  # Timeout
+            message_json = json.dumps({'page': page, 'count': post_visit_count[page]})
+            message_bytes = message_json.encode('utf-8')
+
+            publish_future = publisher.publish(topic_path, data=message_bytes)
+            publish_future.result()  # Verify the publish succeeded
+
+            print(f"Publishing {message_json} to the queue :)")
+
+            post_visit_count[page] = 0
+            page_last_dispatch[page] = datetime.now() # Reset del cache
+
+        post_visit_lazy_update = [post_visit_count, page_last_dispatch] # Actualizo el cache
+
         return 'Message published.'
     except Exception as e:
         print(e)

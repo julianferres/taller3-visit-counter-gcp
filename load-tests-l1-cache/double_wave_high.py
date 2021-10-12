@@ -32,8 +32,8 @@ class DoubleWave(LoadTestShape):
     """
 
     min_users = 10
-    peak_one_users = 40
-    peak_two_users = 40
+    peak_one_users = 500
+    peak_two_users = 3000
     time_limit = 600
 
     def tick(self):

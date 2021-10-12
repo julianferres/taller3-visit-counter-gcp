@@ -32,14 +32,14 @@ def increment_counter(event, context):
     """.format(context.event_id, context.timestamp, context.resource["name"]))
 
     if 'data' in event:
-        page = json.loads(base64.b64decode(event['data']).decode())['page']
+        message_json = json.loads(base64.b64decode(event['data']).decode())
+        page, count = message_json['page'], int(message_json['count'])
     else:
-        page = 'home'
-        
+        return         
     
     # https://cloud.google.com/firestore/docs/solutions/counters#python_2
     db_counters = firestore.Client()
     counter = Counter(NUM_SHARDS)
-    counter.increment_counter(db_counters, page)
-    print(f"Increment {page} in one visit")
+    counter.increment_counter(db_counters, page, count)
+    print(f"Incremented '{page}' in {count} visits")
     

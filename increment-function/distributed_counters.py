@@ -58,12 +58,12 @@ class Counter(object):
     # [END firestore_solution_sharded_counter_create]
 
     # [START firestore_solution_sharded_counter_increment]
-    def increment_counter(self, doc_ref, col_name):
+    def increment_counter(self, doc_ref, col_name, amount):
         """Increment a randomly picked shard."""
         doc_id = random.randint(0, self._num_shards - 1)
 
         shard_ref = doc_ref.collection(col_name).document(str(doc_id))
-        return shard_ref.update({"count": firestore.Increment(1)})
+        return shard_ref.update({"count": firestore.Increment(amount)})
     # [END firestore_solution_sharded_counter_increment]
 
     # [START firestore_solution_sharded_counter_get]
